@@ -757,7 +757,18 @@ async def main():
     global BOT_USERNAME
     if not BOT_TOKEN:
         raise SystemExit("Укажите BOT_TOKEN в файле .env")
-    bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True))
+    # Прокси (нужен на бесплатном PythonAnywhere: PROXY_URL=http://proxy.server:3128)
+    proxy = os.getenv("PROXY_URL", "").strip()
+    session = None
+    if proxy:
+        from aiogram.client.session.aiohttp import AiohttpSession
+        session = AiohttpSession(proxy=proxy)
+        log.info("Используется прокси %s", proxy)
+    bot = Bot(
+        BOT_TOKEN,
+        session=session,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True),
+    )
     me = await bot.get_me()
     BOT_USERNAME = me.username
     log.info("Бот @%s запущен. Админы: %s. Каналы: %s", BOT_USERNAME, ADMIN_IDS or "не заданы", CHANNELS)
